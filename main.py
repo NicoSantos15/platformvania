@@ -5,15 +5,15 @@ pygame.init()
 win = pygame.display.set_mode((700, 500))
 pygame.display.set_caption("Platformvania")
 
-walkRight = [pygame.image.load('Media/frame_0.png'),
-             pygame.image.load('Media/frame_1.png'),
-             pygame.image.load('Media/frame_2.png'),
-             pygame.image.load('Media/frame_3.png'),
-             pygame.image.load('Media/frame_4.png'),
-             pygame.image.load('Media/frame_5.png'),
-             pygame.image.load('Media/frame_6.png'),
-             pygame.image.load('Media/frame_7.png'),
-             pygame.image.load('Media/frame_0.png')]
+walkRight = [pygame.image.load('Media/image1.png'),
+             pygame.image.load('Media/image2.png'),
+             pygame.image.load('Media/image3.png'),
+             pygame.image.load('Media/image4.png'),
+             pygame.image.load('Media/image5.png'),
+             pygame.image.load('Media/image6.png'),
+             pygame.image.load('Media/image7.png'),
+             pygame.image.load('Media/image8.png'),
+             pygame.image.load('Media/image1.png')]
 
 walkLeft = [pygame.image.load('Media/frame_0.png'),
              pygame.image.load('Media/frame_1.png'),
