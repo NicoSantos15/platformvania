@@ -29,7 +29,7 @@ end
 # unset irrelevant variables
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/nieshasei/PycharmProjects/ultimateGame/venv"
+set -gx VIRTUAL_ENV "/Users/nieshasei/Desktop/My Repos/platformvania_original/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

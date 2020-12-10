@@ -1,107 +1,113 @@
-# Written by: Nico Santos
-# From: Adelaide, South Australia
-
 import pygame
-from pygame.locals import *
 
 pygame.init()
-screen_width = 1000
-screen_height = 600
 
-screen = pygame.display.set_mode((screen_width,screen_height))
-pygame.display.set_caption('Platformer')
+win = pygame.display.set_mode((700, 500))
+pygame.display.set_caption("Platformvania")
 
-# Size of tile in the map
-tile_size = 50
+walkRight = [pygame.image.load('Media/frame_0.png'),
+             pygame.image.load('Media/frame_1.png'),
+             pygame.image.load('Media/frame_2.png'),
+             pygame.image.load('Media/frame_3.png'),
+             pygame.image.load('Media/frame_4.png'),
+             pygame.image.load('Media/frame_5.png'),
+             pygame.image.load('Media/frame_6.png'),
+             pygame.image.load('Media/frame_7.png'),
+             pygame.image.load('Media/frame_0.png')]
 
-# Load image moon
-moon_img = pygame.image.load('Graphics/pixel_moon.jpg')
-moon_img = pygame.transform.scale(moon_img, (200,200))
+walkLeft = [pygame.image.load('Media/frame_0.png'),
+             pygame.image.load('Media/frame_1.png'),
+             pygame.image.load('Media/frame_2.png'),
+             pygame.image.load('Media/frame_3.png'),
+             pygame.image.load('Media/frame_4.png'),
+             pygame.image.load('Media/frame_5.png'),
+             pygame.image.load('Media/frame_6.png'),
+             pygame.image.load('Media/frame_7.png'),
+             pygame.image.load('Media/frame_0.png')]
 
-# Load image background
-background_img = pygame.image.load('Graphics/dark_background.png')
-background_img = pygame.transform.scale(background_img, (1000,1000))
+bg = pygame.image.load('Media/Reference (1).png')
+bg = pygame.transform.scale(bg, (700,500))
+char = [pygame.image.load('Media/idle1.png'),
+        pygame.image.load('Media/idle2.png'),
+        pygame.image.load('Media/idle3.png'),
+        pygame.image.load('Media/idle4.png')]
 
-def show_grid():
-    for line in range(0, 20):
-        pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size), (screen_width, line * tile_size))
-        pygame.draw.line(screen, (255, 255, 255), (line * tile_size,0), (line * tile_size, screen_height))
+x = 50
+y = 340 # Y-Position of the character. Lower value = higher position in screen
+width = 40
+height = 60
+vel = 5
 
-class World():
-    def __init__(self, data):
-        self.tile_list = []
+clock = pygame.time.Clock()
 
+isJump = False
+jumpCount = 10
 
-        # Load image for platform
-        floor_img = pygame.image.load('Graphics/dirt.png')
-
-        row_count = 0
-        for row in data:
-            col_count = 0
-            for tile in row:
-                if tile == 1:
-                    img = pygame.transform.scale(floor_img,(tile_size,tile_size))
-                    img_rect = img.get_rect()
-                    img_rect.y = row_count * tile_size
-                    img_rect.x = col_count * tile_size
-                    tile = (img, img_rect)
-                    self.tile_list.append(tile)
-                col_count += 1
-            row_count += 1
-    def draw(self):
-        for tile in self.tile_list:
-            screen.blit(tile[0], tile[1])
+left = False
+right = False
+walkCount = 0
 
 
-# This is the map, indicates the number of the chosen image to show based on numbers.
-world_data = [
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 1],
-[1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 2, 2, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 5, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 1],
-[1, 7, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
-[1, 0, 2, 0, 0, 7, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+def redrawGameWindow():
+    global walkCount
 
-world = World(world_data)
-# Variable controller for the program to run, Returns
-# Returns true if the game is still run and False if the game will end
+    win.blit(bg, (0, 0))
+    if walkCount + 1 >= 27:
+        walkCount = 0
+
+    if left:
+        win.blit(walkLeft[walkCount // 3], (x, y))
+        walkCount += 1
+    elif right:
+        win.blit(walkRight[walkCount // 3], (x, y))
+        walkCount += 1
+    else:
+        win.blit(char[1], (x, y))
+        walkCount = 0
+
+    pygame.display.update()
+
+
 run = True
 
-# Loop to keep the game running. Will quit depending on the player's choice
 while run:
-
-    screen.blit(background_img, (0,0))
-    screen.blit(moon_img, (75,75))
-
-    world.draw()
-
-    # Uncomment this to show the grid
-    #show_grid()
-
+    clock.tick(42)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-    pygame.display.update()
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_LEFT] and x > vel:
+        x -= vel
+        left = True
+        right = False
+
+    elif keys[pygame.K_RIGHT] and x < 500 - vel - width:
+        x += vel
+        left = False
+        right = True
+
+    else:
+        left = False
+        right = False
+        walkCount = 0
+
+    if not (isJump):
+        if keys[pygame.K_SPACE]:
+            isJump = True
+            left = False
+            right = False
+            walkCount = 0
+    else:
+        if jumpCount >= -10:
+            y -= (jumpCount * abs(jumpCount)) * 0.5
+            jumpCount -= 1
+        else:
+            jumpCount = 10
+            isJump = False
+
+    redrawGameWindow()
+
 pygame.quit()
-
-
-# Print hi every time program runs
-def print_hi(name):
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-# Main function proxy. Functions should be run here
-def main():
-    print_hi('PyCharm')
-
-# Main Function
-if __name__ == '__main__':
-    main()
