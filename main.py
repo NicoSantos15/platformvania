@@ -1,113 +1,110 @@
 import pygame
+from pygame.locals import *
+import sys
+import random
 
 pygame.init()
+vec = pygame.math.Vector2  # 2 for two dimensional
 
-win = pygame.display.set_mode((700, 500))
-pygame.display.set_caption("Platformvania")
+# Screen height
+HEIGHT = 450
+# Screen width
+WIDTH = 400
+# Accuracy of movement
+ACC = 0.5
+# Friction of movement
+FRIC = -0.12
+# Frames per second
+FPS = 60
+# Data to be used for FPS, which will dictate the speed of the game
+FramePerSec = pygame.time.Clock()
 
-walkRight = [pygame.image.load('Media/image1.png'),
-             pygame.image.load('Media/image2.png'),
-             pygame.image.load('Media/image3.png'),
-             pygame.image.load('Media/image4.png'),
-             pygame.image.load('Media/image5.png'),
-             pygame.image.load('Media/image6.png'),
-             pygame.image.load('Media/image7.png'),
-             pygame.image.load('Media/image8.png'),
-             pygame.image.load('Media/image1.png')]
+displaysurface = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Game")
 
-walkLeft = [pygame.image.load('Media/frame_0.png'),
-             pygame.image.load('Media/frame_1.png'),
-             pygame.image.load('Media/frame_2.png'),
-             pygame.image.load('Media/frame_3.png'),
-             pygame.image.load('Media/frame_4.png'),
-             pygame.image.load('Media/frame_5.png'),
-             pygame.image.load('Media/frame_6.png'),
-             pygame.image.load('Media/frame_7.png'),
-             pygame.image.load('Media/frame_0.png')]
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # self.image = pygame.image.load("character.png")
+        self.surf = pygame.Surface((30, 30))
+        self.surf.fill((128, 255, 40))
+        self.rect = self.surf.get_rect()
 
-bg = pygame.image.load('Media/Reference (1).png')
-bg = pygame.transform.scale(bg, (700,500))
-char = [pygame.image.load('Media/idle1.png'),
-        pygame.image.load('Media/idle2.png'),
-        pygame.image.load('Media/idle3.png'),
-        pygame.image.load('Media/idle4.png')]
+        self.pos = vec((10, 360))
+        self.vel = vec(0, 0)
+        self.acc = vec(0, 0)
 
-x = 50
-y = 340 # Y-Position of the character. Lower value = higher position in screen
-width = 40
-height = 60
-vel = 5
+    def move(self):
+        self.acc = vec(0, 0.5)
 
-clock = pygame.time.Clock()
+        pressed_keys = pygame.key.get_pressed()
 
-isJump = False
-jumpCount = 10
+        if pressed_keys[K_LEFT]:
+            self.acc.x = -ACC
+        if pressed_keys[K_RIGHT]:
+            self.acc.x = ACC
 
-left = False
-right = False
-walkCount = 0
+        self.acc.x += self.vel.x * FRIC
+        self.vel += self.acc
+        self.pos += self.vel + 0.5 * self.acc
 
+        if self.pos.x > WIDTH:
+            self.pos.x = 0
+        if self.pos.x < 0:
+            self.pos.x = WIDTH
 
-def redrawGameWindow():
-    global walkCount
+        self.rect.midbottom = self.pos
 
-    win.blit(bg, (0, 0))
-    if walkCount + 1 >= 27:
-        walkCount = 0
+    # Jump settings
+    def jump(self):
+        hits = pygame.sprite.spritecollide(self, platforms, False)
+        if hits:
+            self.vel.y = -15
 
-    if left:
-        win.blit(walkLeft[walkCount // 3], (x, y))
-        walkCount += 1
-    elif right:
-        win.blit(walkRight[walkCount // 3], (x, y))
-        walkCount += 1
-    else:
-        win.blit(char[1], (x, y))
-        walkCount = 0
+    # Update or limits the character to collide with the resolution
+    def update(self):
+        hits = pygame.sprite.spritecollide(P1, platforms, False)
+        if P1.vel.y > 0:
+            if hits:
+                self.vel.y = 0
+                self.pos.y = hits[0].rect.top + 1
+
+# Class for game settings
+class platform(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.surf = pygame.Surface((WIDTH, 20))
+        self.surf.fill((255, 0, 0))
+        self.rect = self.surf.get_rect(center=(WIDTH / 2, HEIGHT - 10))
+
+    def move(self):
+        pass
+
+PT1 = platform()
+P1 = Player()
+
+all_sprites = pygame.sprite.Group()
+all_sprites.add(PT1)
+all_sprites.add(P1)
+
+platforms = pygame.sprite.Group()
+platforms.add(PT1)
+
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                P1.jump()
+
+    displaysurface.fill((0, 0, 0))
+    P1.update()
+
+    for entity in all_sprites:
+        displaysurface.blit(entity.surf, entity.rect)
+        entity.move()
 
     pygame.display.update()
-
-
-run = True
-
-while run:
-    clock.tick(42)
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_LEFT] and x > vel:
-        x -= vel
-        left = True
-        right = False
-
-    elif keys[pygame.K_RIGHT] and x < 500 - vel - width:
-        x += vel
-        left = False
-        right = True
-
-    else:
-        left = False
-        right = False
-        walkCount = 0
-
-    if not (isJump):
-        if keys[pygame.K_SPACE]:
-            isJump = True
-            left = False
-            right = False
-            walkCount = 0
-    else:
-        if jumpCount >= -10:
-            y -= (jumpCount * abs(jumpCount)) * 0.5
-            jumpCount -= 1
-        else:
-            jumpCount = 10
-            isJump = False
-
-    redrawGameWindow()
-
-pygame.quit()
+    FramePerSec.tick(FPS)
